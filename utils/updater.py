@@ -7,12 +7,10 @@ import time
 from git import Repo
 
 def on_rm_error(func, path, exc_info):
-    """Обработчик ошибок при удалении файлов"""
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
 def remove_readonly(func, path, _):
-    """Удаление атрибута 'readonly' перед операцией"""
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
@@ -61,7 +59,7 @@ def update_bot():
         
         print("✅ Обновление завершено! Перезапускаем бота...")
         time.sleep(2)
-        os.execv(sys.executable, [sys.executable, "main.py"])
+        os.execv(sys.executable, [sys.executable, "zero.py"])
         
     except Exception as e:
         print(f"❌ Критическая ошибка при обновлении: {e}")
