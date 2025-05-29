@@ -1,6 +1,7 @@
 from utils.imports import *
 from utils.func import *
 
+
 #meta name: System
 #meta developer: @zxcsolomka
 #meta description: Системные модули
@@ -502,20 +503,34 @@ async def update_bot(client: Client, message: Message):
     if not os.path.exists("utils/updater.py"):
         await message.edit_text("❌ Файл обновления не найден!")
         return
-
+    
     await message.edit_text("🔄 Подготовка к обновлению...")
-    with open("restart_info.txt", "w") as f:
-        f.write(f"{message.chat.id}\n{message.id}")
 
+    with open("update_info.txt", "w") as f:
+        f.write(f"{message.chat.id}\n{message.id}\n{await get_version()}")
+    
     try:
         python_exec = sys.executable
-        subprocess.Popen([python_exec, "utils/updater.py"], start_new_session=True)
-        await asyncio.sleep(1)
-        sys.exit(0)
+        if os.name == 'nt':
+            subprocess.Popen(
+                [python_exec, "utils/updater.py"],
+                creationflags=subprocess.CREATE_NEW_CONSOLE | subprocess.DETACHED_PROCESS
+            )
+        else:
+            subprocess.Popen(
+                ['nohup', python_exec, "utils/updater.py"],
+                stdout=open('nohup.out', 'w'),
+                stderr=subprocess.STDOUT,
+                start_new_session=True
+            )
+        
+        await client.stop()
+        os._exit(0)
+        
     except Exception as e:
         await message.edit_text(f"❌ Ошибка запуска обновления: {e}")
-        if os.path.exists("restart_info.txt"):
-            os.remove("restart_info.txt")
+        if os.path.exists("update_info.txt"):
+            os.remove("update_info.txt")
 
 @app.on_message(filters.command("im", prefixes=prefix) & filters.user(allow) & filters.reply)
 async def info_module(client: Client, message: Message):
@@ -588,6 +603,80 @@ async def info_module(client: Client, message: Message):
         print(f"Ошибка при отправке фото: {e}")
         await message.edit_text(response)
 
+@app.on_message(filters.command("hidden", prefix) & filters.user(allow))
+async def hidden_module(client: Client, message: Message):
+    args = message.text.split(maxsplit=2)
+    if len(args) < 3:
+        await message.edit_text(
+            "❌ Неправильный формат команды\n"
+            f"Используйте: <code>{prefix}hidden on/off название_модуля</code>"
+        )
+        return
+    
+    action = args[1].lower()
+    module_query = args[2].strip()
+    
+    if action not in ["on", "off"]:
+        await message.edit_text(
+            "❌ Неправильное действие\n"
+            f"Используйте: <code>{prefix}hidden on/off название_модуля</code>"
+        )
+        return
+    
+    exact_match = None
+    partial_matches = []
+    
+    for name in modules_info:
+        if module_query.lower() == name.lower():
+            exact_match = name
+            break
+        elif module_query.lower() in name.lower():
+            partial_matches.append(name)
+    
+    if not exact_match and not partial_matches:
+        await message.edit_text("❌ Модуль не найден")
+        return
+    
+    if not exact_match and len(partial_matches) > 1:
+        response = "🔎 Найдено несколько совпадений:\n\n"
+        response += "\n".join([f"» <code>{match}</code>" for match in partial_matches])
+        await message.edit_text(response)
+        return
+    
+    module_name = exact_match if exact_match else partial_matches[0]
+    module_info = modules_info[module_name]
+    file_path = module_info["path"]
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        
+        new_lines = []
+        hidden_found = False
+        
+        for line in lines:
+            if line.startswith("#meta hidden:"):
+                new_lines.append(f"#meta hidden: {action == 'on'}\n")
+                hidden_found = True
+            else:
+                new_lines.append(line)
+        
+        if not hidden_found:
+            for i, line in enumerate(new_lines):
+                if line.startswith("#meta "):
+                    new_lines.insert(i+1, f"#meta hidden: {action == 'on'}\n")
+                    break
+        
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.writelines(new_lines)
+        
+        load_modules()
+        
+        status = "скрыт" if action == "on" else "показан"
+        await message.edit_text(f"✅ Модуль <code>{module_name}</code> теперь {status} в списке помощи")
+    except Exception as e:
+        await message.edit_text(f"❌ Ошибка при изменении модуля: {e}")
+
 modules_help['System'] = {
   "ping": "Узнать пинг",
   "info": "Информация о боте",
@@ -596,6 +685,7 @@ modules_help['System'] = {
   "um": "Выгрузить модуль файлом",
   "im": "Информация о модуле по файлу",
   "help": "Помощь по модулям",
+  "hidden": "Скрытие модуля из листа помощи",
   "setprefix": "сменить префикс",
   "addowner": "Добавить пользователя в управление ботом",
   "delowner": "Исключить пользователя в управление ботом",
