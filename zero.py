@@ -294,7 +294,7 @@ async def authorize():
 
 async def main():
     os.system('cls' if os.name == 'nt' else 'clear')
-    
+
     if os.path.exists("update_info.txt"):
         try:
             async with app:
@@ -303,21 +303,15 @@ async def main():
                     chat_id = int(lines[0].strip())
                     message_id = int(lines[1].strip())
                     old_version = lines[2].strip() if len(lines) > 2 else "0.0"
-                
+
                 new_version = await get_version()
                 changes = "Информация об изменениях недоступна"
-                try:
-                    changes_url = "https://raw.githubusercontent.com/ZeroUserBot/zero/main/changes.txt" 
-                    response = requests.get(changes_url, timeout=5)
-                    if response.status_code == 200:
-                        changes_text = response.text
-                        version_section = f"changes(version={new_version}):"
-                        if version_section in changes_text:
-                            start_idx = changes_text.index(version_section) + len(version_section)
-                            end_idx = changes_text.find("changes(version=", start_idx)
-                            changes = changes_text[start_idx:end_idx].strip() if end_idx != -1 else changes_text[start_idx:].strip()
-                except Exception as e:
-                    print(f"⚠️ Ошибка при получении изменений: {e}")
+
+                if os.path.exists("version_info.txt"):
+                    with open("version_info.txt", "r", encoding="utf-8") as f:
+                        v_lines = f.readlines()
+                        if len(v_lines) >= 2 and v_lines[0].strip() == new_version:
+                            changes = "\n".join(line.strip() for line in v_lines[1:]) or "Не указано"
 
                 message_text = (
                     f"✅ Бот был успешно обновлен на version <code>{new_version}</code>\n"
@@ -329,6 +323,8 @@ async def main():
         finally:
             if os.path.exists("update_info.txt"):
                 os.remove("update_info.txt")
+            if os.path.exists("version_info.txt"):
+                os.remove("version_info.txt")
 
     from utils.start import print_start
     print_start()
