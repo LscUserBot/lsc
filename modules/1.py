@@ -175,12 +175,12 @@ async def modules_help_command(client: Client, message: Message):
         for module_name, info in system_modules:
             commands = modules_help.get(module_name, {})
             command_list = "|".join([f"{cmd}" for cmd in commands.keys()])
-            response += f"» <b>{module_name}</b>: ({command_list})\n"
+            response += f"» <i>{module_name}</i>: ({command_list})\n"
         
         for module_name, info in other_modules:
             commands = modules_help.get(module_name, {})
             command_list = "|".join([f"{cmd}" for cmd in commands.keys()])
-            response += f"» {module_name}: ({command_list})\n"
+            response += f"» <code>{module_name}</code>: ({command_list})\n"
         
         await message.edit_text(response)
 
@@ -502,18 +502,20 @@ async def update_bot(client: Client, message: Message):
     if not os.path.exists("utils/updater.py"):
         await message.edit_text("❌ Файл обновления не найден!")
         return
-    
+
     await message.edit_text("🔄 Подготовка к обновлению...")
-    
-    with open("update_info.txt", "w") as f:
+    with open("restart_info.txt", "w") as f:
         f.write(f"{message.chat.id}\n{message.id}")
-    
+
     try:
-        os.execv(sys.executable, [sys.executable, "utils/updater.py"])
+        python_exec = sys.executable
+        subprocess.Popen([python_exec, "utils/updater.py"], start_new_session=True)
+        await asyncio.sleep(1)
+        sys.exit(0)
     except Exception as e:
         await message.edit_text(f"❌ Ошибка запуска обновления: {e}")
-        if os.path.exists("update_info.txt"):
-            os.remove("update_info.txt")
+        if os.path.exists("restart_info.txt"):
+            os.remove("restart_info.txt")
 
 @app.on_message(filters.command("im", prefixes=prefix) & filters.user(allow) & filters.reply)
 async def info_module(client: Client, message: Message):
