@@ -294,60 +294,92 @@ async def authorize():
 
 async def main():
     os.system('cls' if os.name == 'nt' else 'clear')
-
-    if os.path.exists("update_info.txt"):
-        with open("update_info.txt", "r") as f:
-            chat_id, message_id = map(int, f.readlines())
-        os.remove("update_info.txt")
-        await app.edit_message_text(chat_id, message_id, "✅ Бот успешно обновлен!")
     
+    if os.path.exists("update_info.txt"):
+        try:
+            async with app:
+                with open("update_info.txt", "r") as f:
+                    lines = f.readlines()
+                    chat_id = int(lines[0].strip())
+                    message_id = int(lines[1].strip())
+                    old_version = lines[2].strip() if len(lines) > 2 else "0.0"
+                
+                new_version = await get_version()
+                changes = "Информация об изменениях недоступна"
+                try:
+                    changes_url = "https://raw.githubusercontent.com/ZeroUserBot/zero/main/changes.txt" 
+                    response = requests.get(changes_url, timeout=5)
+                    if response.status_code == 200:
+                        changes_text = response.text
+                        version_section = f"changes(version={new_version}):"
+                        if version_section in changes_text:
+                            start_idx = changes_text.index(version_section) + len(version_section)
+                            end_idx = changes_text.find("changes(version=", start_idx)
+                            changes = changes_text[start_idx:end_idx].strip() if end_idx != -1 else changes_text[start_idx:].strip()
+                except Exception as e:
+                    print(f"⚠️ Ошибка при получении изменений: {e}")
+
+                message_text = (
+                    f"✅ Бот был успешно обновлен на version <code>{new_version}</code>\n"
+                    f"✏️ <blockquote><i>Изменения в версии:\n{changes}</i></blockquote>"
+                )
+                await app.edit_message_text(chat_id, message_id, message_text)
+        except Exception as e:
+            print(f"⚠️ Не удалось отправить сообщение об обновлении: {e}")
+        finally:
+            if os.path.exists("update_info.txt"):
+                os.remove("update_info.txt")
+
     from utils.start import print_start
     print_start()
-    
     print("🔄 Начинаем авторизацию...")
+
     if not await authorize():
         print("⚠️ Авторизация не удалась, запрашиваем данные вручную...")
         phone = input("📱 Введите номер телефона: ")
         try:
-            sent_code = await app.send_code(phone)
-            code = input("🔢 Введите код подтверждения: ")
-            await app.sign_in(phone, sent_code.phone_code_hash, code)
-            
-            me = await app.get_me()
-            print(f"✅ Успешная авторизация как {me.first_name}")
-            
-            if me.id not in allow:
-                new_allow = allow.copy()
-                new_allow.append(me.id)
-                update_settings(allow=new_allow)
-                globals()['allow'] = new_allow
-                print(f"✅ ID {me.id} добавлен в список владельцев")
-                
+            async with app:
+                sent_code = await app.send_code(phone)
+                code = input("🔢 Введите код подтверждения: ")
+                await app.sign_in(phone, sent_code.phone_code_hash, code)
+                me = await app.get_me()
+                print(f"✅ Успешная авторизация как {me.first_name}")
+                if me.id not in allow:
+                    new_allow = allow.copy()
+                    new_allow.append(me.id)
+                    update_settings(allow=new_allow)
+                    globals()['allow'] = new_allow
+                    print(f"✅ ID {me.id} добавлен в список владельцев")
         except Exception as e:
             print(f"❌ Критическая ошибка при входе: {str(e)}")
             return
-    
+
     if os.path.exists("restart_info.txt"):
         with open("restart_info.txt", "r") as f:
             lines = f.readlines()
             chat_id = int(lines[0].strip())
             message_id = int(lines[1].strip())
         os.remove("restart_info.txt")
-        
         try:
-            await app.edit_message_text(chat_id, message_id, "✅ Бот успешно перезагружен!")
+            async with app:
+                await app.edit_message_text(chat_id, message_id, "✅ Бот успешно перезагружен!")
         except Exception as e:
             print(f"⚠️ Не удалось отредактировать сообщение: {e}")
-    
+
     print("📦 Загружаем модули...")
     load_modules()
-    
     if not modules_info:
         print("⚠️ Нет загруженных модулей!")
     else:
         print(f"✅ Загружено {len(modules_info)} модулей")
-    
+
     print("🟢 Бот успешно запущен! Ожидаем команды...")
+    try:
+        me = await app.get_me()
+        await app.send_message(me.id, 'Бот запущен!')
+    except Exception as e:
+        print(f"⚠️ Не удалось отправить сообщение о запуске: {e}")
+
     await idle()
 
 if __name__ == "__main__":
