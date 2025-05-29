@@ -288,12 +288,14 @@ async def download_module(client: Client, message: Message):
             matches.append((mod_name, info))
     
     if file_exists and not matches:
+        await message.deleted()
         await message.reply_document(
             filepath_by_filename,
             caption=f"✅ Модуль <code>{user_input}</code> выгружен"
         )
     elif not file_exists and len(matches) == 1:
         mod_name, info = matches[0]
+        await message.delete()
         await message.reply_document(
             info["path"],
             caption=f"✅ Модуль <code>{mod_name}</code> выгружен"
@@ -301,6 +303,7 @@ async def download_module(client: Client, message: Message):
     elif file_exists and len(matches) == 1:
         mod_name, info = matches[0]
         if os.path.normpath(info["path"]) == os.path.normpath(filepath_by_filename):
+            await message.delete()
             await message.reply_document(
                 info["path"],
                 caption=f"✅ Модуль <code>{mod_name}</code> выгружен"
