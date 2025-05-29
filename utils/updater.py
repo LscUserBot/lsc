@@ -101,3 +101,6 @@ def update_bot():
             except Exception as cleanup_error:
                 print(f"⚠️ Ошибка при очистке временных файлов: {cleanup_error}")
         sys.exit(1)
+
+if __name__ == "__main__":
+    update_bot()
