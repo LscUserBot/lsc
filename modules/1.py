@@ -2,7 +2,7 @@ from utils.imports import *
 from utils.func import *
 
 #meta name: System
-#meta developer: @zxcsolomka
+#meta developer: @lscmods & @lscuserbot
 #meta description: Системные модули
 #meta img: https://i.pinimg.com/736x/1e/57/41/1e5741cd9716634b91d34923d4afad55.jpg
 
