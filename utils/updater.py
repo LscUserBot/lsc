@@ -14,7 +14,7 @@ def remove_readonly(func, path, _):
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
-EXCLUDE_DIRS = ['modules', 'utils']
+EXCLUDE_DIRS = ['modules']
 EXCLUDE_FILES = ['user.txt', 'database.db', 'zero.session']
 
 def should_skip(path):
@@ -34,7 +34,7 @@ def update_bot():
             shutil.rmtree(temp_dir, onerror=remove_readonly)
 
         print("⏬ Загружаем обновления из репозитория...")
-        Repo.clone_from("https://github.com/ZeroUserBot/zero.git", temp_dir)
+        Repo.clone_from("https://github.com/ZeroUserBot/zero.git",  temp_dir)
         
         print("🔄 Устанавливаем обновления...")
         
@@ -92,3 +92,5 @@ def update_bot():
 
 if __name__ == "__main__":
     update_bot()
+    time.sleep(2)
+    sys.exit(0)
