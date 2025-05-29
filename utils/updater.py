@@ -1,11 +1,5 @@
-import os
-import sys
-import shutil
-import stat
-import time
-import subprocess
-import requests
-from git import Repo
+from utils.imports import *
+from utils.func import *
 
 def on_rm_error(func, path, exc_info):
     """Функция для обработки ошибок при удалении"""
@@ -17,7 +11,7 @@ SKIP_FILES = ['changes.txt', 'README.md']
 
 def get_version_changes(new_version):
     try:
-        changes_url = "https://raw.githubusercontent.com/LscUserBot/lsc/main/changes.txt" 
+        changes_url = "https://raw.githubusercontent.com/LscUserBot/lsc/main/changes.txt"    
         response = requests.get(changes_url)
         if response.status_code == 200:
             changes_text = response.text
@@ -77,6 +71,20 @@ def update_bot():
                     shutil.copy2(src_file, dst_file)
                 except Exception as e:
                     print(f"⚠️ Ошибка при копировании файла {src_file}: {e}")
+
+        print("📦 Проверяем зависимости: requirements.txt")
+
+        req_file = os.path.join(temp_dir, "requirements.txt")
+        if os.path.exists(req_file):
+            print("🔄 Найден requirements.txt — устанавливаем зависимости...")
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", req_file])
+                print("✅ Зависимости успешно установлены!")
+            except subprocess.CalledProcessError as e:
+                print(f"❌ Ошибка при установке зависимостей: {e}")
+        else:
+            print("⚠️ Файл requirements.txt не найден! Установка зависимостей пропущена.")
+            print("⚠️ Возможны ошибки при работе бота!")
 
         print("🧹 Очистка временных файлов...")
         shutil.rmtree(temp_dir, onerror=on_rm_error)
