@@ -1,3 +1,4 @@
+![LSC User Bot](lsc.png)
 # 🔥 LSC User Bot - Мощный юзер-бот для Telegram
 
 [![Telegram Channel](https://img.shields.io/badge/Channel-%40lscuserbot-blue)](https://t.me/lscuserbot)
