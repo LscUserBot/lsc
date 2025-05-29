@@ -4,6 +4,7 @@ import shutil
 import stat
 import time
 import subprocess
+import requests
 from git import Repo
 
 def on_rm_error(func, path, exc_info):
@@ -14,19 +15,29 @@ def remove_readonly(func, path, _):
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
-EXCLUDE_DIRS = ['modules']
+EXCLUDE_DIRS = []
 EXCLUDE_FILES = ['user.txt', 'database.db', 'zero.session']
 
 def should_skip(path):
-    abs_path = os.path.abspath(path)
-    for exclude_dir in EXCLUDE_DIRS:
-        exclude_dir_abs = os.path.abspath(exclude_dir)
-        if os.path.commonprefix([exclude_dir_abs, abs_path]) == exclude_dir_abs:
-            if os.path.basename(abs_path) == "1.py" and os.path.dirname(abs_path) == exclude_dir_abs:
-                return False
-            else:
-                return True
     return False
+
+def get_version_changes(new_version):
+    try:
+        changes_url = "https://raw.githubusercontent.com/ZeroUserBot/zero/main/changes.txt"
+        response = requests.get(changes_url)
+        if response.status_code == 200:
+            changes_text = response.text
+            version_section = f"changes(version={new_version}):"
+            
+            if version_section in changes_text:
+                start_idx = changes_text.index(version_section) + len(version_section)
+                end_idx = changes_text.find("changes(version=", start_idx)
+                if end_idx == -1:
+                    return changes_text[start_idx:].strip()
+                return changes_text[start_idx:end_idx].strip()
+    except Exception:
+        pass
+    return "Информация об изменениях недоступна"
 
 def update_bot():
     print("🚀 Запуск процесса обновления...")
@@ -38,7 +49,13 @@ def update_bot():
             shutil.rmtree(temp_dir, onerror=remove_readonly)
 
         print("⏬ Загружаем обновления из репозитория...")
-        Repo.clone_from("https://github.com/ZeroUserBot/zero.git",  temp_dir)
+        Repo.clone_from("https://github.com/ZeroUserBot/zero.git", temp_dir)
+        
+        new_version = "0.0"
+        version_file = os.path.join(temp_dir, "version.txt")
+        if os.path.exists(version_file):
+            with open(version_file, "r") as f:
+                new_version = f.read().strip()
         
         print("🔄 Устанавливаем обновления...")
         
@@ -50,11 +67,23 @@ def update_bot():
                 print(f"📎 Пропущен системный файл: {item}")
                 continue
             
-            if should_skip(dst):
-                print(f"📎 Пропущена защищённая папка: {item}")
-                continue
-
             try:
+                if item == "modules":
+                    if os.path.exists(dst):
+                        for module_file in os.listdir(src):
+                            module_src = os.path.join(src, module_file)
+                            module_dst = os.path.join(dst, module_file)
+                            
+                            if os.path.exists(module_dst):
+                                print(f"🔄 Обновление модуля: {module_file}")
+                                os.chmod(module_dst, stat.S_IWRITE)
+                                if os.path.isdir(module_dst):
+                                    shutil.rmtree(module_dst, onerror=on_rm_error)
+                                else:
+                                    os.unlink(module_dst)
+                                shutil.copy2(module_src, module_dst)
+                    continue
+                
                 if os.path.exists(dst):
                     if os.path.isdir(dst):
                         shutil.rmtree(dst, onerror=on_rm_error)
@@ -77,6 +106,10 @@ def update_bot():
         print("🧹 Очистка временных файлов...")
         shutil.rmtree(temp_dir, onerror=remove_readonly)
         
+        changes = get_version_changes(new_version)
+        with open("update_info.txt", "w") as f:
+            f.write(f"{new_version}\n{changes}")
+        
         print("✅ Обновление завершено! Перезапускаем бота...")
         time.sleep(2)
 
@@ -96,5 +129,3 @@ def update_bot():
 
 if __name__ == "__main__":
     update_bot()
-    time.sleep(2)
-    sys.exit(0)
