@@ -353,20 +353,13 @@ async def main():
 if __name__ == "__main__":
     try:
         print("[LOG] Запуск бота...")
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        is_restart = os.path.exists("restart_info.txt")
-        if is_restart:
-            with open("restart_info.txt", "r") as f:
-                chat_id, message_id = map(int, f.readlines())
-            os.remove("restart_info.txt")
+        loop = asyncio.get_event_loop()
         loop.run_until_complete(main())
     except KeyboardInterrupt:
         print("\n[INFO] Бот остановлен вручную.")
     except Exception as e:
         print(f"[ERROR] Критическая ошибка: {e}")
     finally:
-        if 'app' in globals() and app.is_initialized:
+        if app.is_connected:
             print("[INFO] Завершаем соединение...")
             loop.run_until_complete(app.stop())
-        loop.close()
