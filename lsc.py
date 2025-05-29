@@ -381,10 +381,7 @@ async def main():
     try:
         me = await app.get_me()
         current_version = await get_version()
-        uptime = time.time() - start_time
-        hours, rem = divmod(uptime, 3600)
-        minutes, seconds = divmod(rem, 60)
-        await app.send_message(me.id, f'🐊 |LSC USER BOT|\n🌟 Версия: {current_version}\n🕐 Время запуска: {int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}\n✨ Основной канал: @lscuserbot\n✨ Канал с модулями: @lscmods\n⭐️ Доступные команды » <code>{prefix}help</code>')
+        await app.send_message(me.id, f'🐊 |LSC USER BOT|\n🌟 Версия: {current_version}\n✨ Основной канал: @lscuserbot\n✨ Канал с модулями: @lscmods\n⭐️ Доступные команды » <code>{prefix}help</code>')
         required_channels = ["lscmods", "lscuserbot"]
         for channel in required_channels:
             try:
