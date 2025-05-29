@@ -24,9 +24,6 @@ LSC User Bot - это высокооптимизированный юзер-бо
 - **Используйте на свой страх и риск**
 - **Не используйте для спама или нарушений ToS Telegram**
 
-## 📢 Поддержка и обновления
-- **Официальный канал: <a href='https://t.me/lscuserbot'>@lscuserbot</a>**
-- **Канал модулей: <a href='https://t.me/lscmods'>@lscmods</a>**
 
 ## 📦 Требования
 
@@ -67,7 +64,7 @@ pip install -r requirements.txt
 ```bash
 python lsc.py
 ```
-Введите данные из <a href='https://my.telegram.org/auth'>my.telegram.org</a>(<a href='https://otvet.mail.ru/question/236047187'>подробнее...</a>)
+Введите данные из <a href='https://my.telegram.org/auth'>my.telegram.org</a> (<a href='https://otvet.mail.ru/question/236047187'>подробнее...</a>)
 
 ## 🛠 Шаг 4: Запуск бота 
 
@@ -75,5 +72,9 @@ python lsc.py
 ```bash
 python lsc.py
 ```
+
+## 📢 Поддержка и обновления
+- **Официальный канал: <a href='https://t.me/lscuserbot'>@lscuserbot</a>**
+- **Канал модулей: <a href='https://t.me/lscmods'>@lscmods</a>**
 
 <code>LSC User Bot | 2025</code>
