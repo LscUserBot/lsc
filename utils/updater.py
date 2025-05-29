@@ -12,12 +12,12 @@ def on_rm_error(func, path, exc_info):
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
-EXCLUDE_FILES = ['user.txt', 'database.db', 'zero.session']
+EXCLUDE_FILES = ['user.txt', 'database.db', 'lsc.session']
 SKIP_FILES = ['changes.txt', 'README.md']
 
 def get_version_changes(new_version):
     try:
-        changes_url = "https://raw.githubusercontent.com/ZeroUserBot/zero/main/changes.txt" 
+        changes_url = "https://raw.githubusercontent.com/LscUserBot/lsc/main/changes.txt" 
         response = requests.get(changes_url)
         if response.status_code == 200:
             changes_text = response.text
@@ -43,7 +43,7 @@ def update_bot():
             shutil.rmtree(temp_dir, onerror=on_rm_error)
 
         print("⏬ Загружаем обновления из репозитория...")
-        Repo.clone_from("https://github.com/ZeroUserBot/zero.git",  temp_dir)
+        Repo.clone_from("https://github.com/LscUserBot/lsc.git",  temp_dir)
 
         new_version = "0.0"
         version_file = os.path.join(temp_dir, "version.txt")
@@ -89,7 +89,7 @@ def update_bot():
         time.sleep(2)
 
         python_exec = sys.executable
-        script_path = os.path.abspath("zero.py")
+        script_path = os.path.abspath("lsc.py")
         subprocess.Popen([python_exec, script_path], start_new_session=True)
         sys.exit(0)
 
