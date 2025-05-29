@@ -505,18 +505,32 @@ async def update_bot(client: Client, message: Message):
     if not os.path.exists("utils/updater.py"):
         await message.edit_text("❌ Файл обновления не найден!")
         return
-    
+
     await message.edit_text("🔄 Подготовка к обновлению...")
-    
+
     old_version = await get_version()
     with open("update_info.txt", "w") as f:
         f.write(f"{message.chat.id}\n{message.id}\n{old_version}")
-    
+
     try:
         python_exec = sys.executable
-        subprocess.Popen([python_exec, "utils/updater.py"], start_new_session=True)
-        await asyncio.sleep(1)
+        if os.name == 'nt':
+            subprocess.Popen(
+                [python_exec, "utils/updater.py"],
+                creationflags=subprocess.CREATE_NEW_CONSOLE
+            )
+        else:  # Linux/macOS
+            subprocess.Popen(
+                [python_exec, "utils/updater.py"],
+                start_new_session=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+
+        print("💤 Ждём перед выходом...")
+        await asyncio.sleep(2)
         sys.exit(0)
+
     except Exception as e:
         await message.edit_text(f"❌ Ошибка запуска обновления: {e}")
         if os.path.exists("update_info.txt"):
