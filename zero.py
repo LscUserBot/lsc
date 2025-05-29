@@ -314,7 +314,7 @@ async def main():
                             changes = "\n".join(line.strip() for line in v_lines[1:]) or "Не указано"
 
                 message_text = (
-                    f"✅ Бот был успешно обновлен на version <code>{new_version}</code>\n"
+                    f"✅ Бот был успешно обновлен с <code>{old_version}</code> на <code>{new_version}</code>\n"
                     f"✏️ <blockquote><i>Изменения в версии:\n{changes}</i></blockquote>"
                 )
                 await app.edit_message_text(chat_id, message_id, message_text)
