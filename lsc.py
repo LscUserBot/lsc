@@ -318,7 +318,7 @@ async def main():
 
                 message_text = (
                     f"✅ Бот был успешно обновлен с <code>{old_version}</code> на <code>{new_version}</code>\n"
-                    f"✏️ <blockquote><i>Изменения в версии:\n{changes}</i></blockquote>"
+                    f"<blockquote>✏️ <i>Изменения в версии:\n{changes}</i></blockquote>"
                 )
                 await app.edit_message_text(chat_id, message_id, message_text)
         except Exception as e:
