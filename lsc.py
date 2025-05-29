@@ -19,6 +19,9 @@ import pytz
 import platform
 from datetime import datetime
 
+start_time = time.time()
+system = platform.system()
+
 def check_user_file():
     if not os.path.exists("user.txt"):
         print("Файл user.txt не найден, создаем новый...")
@@ -54,7 +57,7 @@ async def check_version(app: Client, prefix: str):
         with open("version.txt", "r") as f:
             local_version = f.read().strip()
 
-        github_url = "https://raw.githubusercontent.com/ZeroUserBot/zero/main/version.txt"
+        github_url = "https://raw.githubusercontent.com/LscUserBot/lsc/main/version.txt"
         try:
             response = requests.get(github_url, timeout=10)
             response.raise_for_status()
@@ -178,10 +181,10 @@ prefix = settings['prefix']
 allow = settings['allow']
 
 app = Client(
-    "zero",
+    "lsc",
     api_id=int(API_ID),
     api_hash=API_HASH,
-    device_model="ZERO",
+    device_model="LSC",
     app_version="1.0"
 )
 
@@ -325,6 +328,23 @@ async def main():
                 os.remove("update_info.txt")
             if os.path.exists("version_info.txt"):
                 os.remove("version_info.txt")
+    
+    if os.path.exists("restart_info.txt"):
+        with open("restart_info.txt", "r") as f:
+            lines = f.readlines()
+            chat_id = int(lines[0].strip())
+            message_id = int(lines[1].strip())
+            restart_time = float(lines[2].strip())
+        os.remove("restart_info.txt")
+        
+        current_time = time.time()
+        elapsed_seconds = round(current_time - restart_time, 2)
+        
+        try:
+            async with app:
+                await app.edit_message_text(chat_id, message_id, f"✅ Бот успешно перезагружен за <code>{elapsed_seconds}</code> секунд!\n<blockquote><i>Но модули все еще могу загружаться!</blockquote></i>")
+        except Exception as e:
+            print(f"⚠️ Не удалось отредактировать сообщение: {e}")
 
     from utils.start import print_start
     print_start()
@@ -350,18 +370,6 @@ async def main():
             print(f"❌ Критическая ошибка при входе: {str(e)}")
             return
 
-    if os.path.exists("restart_info.txt"):
-        with open("restart_info.txt", "r") as f:
-            lines = f.readlines()
-            chat_id = int(lines[0].strip())
-            message_id = int(lines[1].strip())
-        os.remove("restart_info.txt")
-        try:
-            async with app:
-                await app.edit_message_text(chat_id, message_id, "✅ Бот успешно перезагружен!")
-        except Exception as e:
-            print(f"⚠️ Не удалось отредактировать сообщение: {e}")
-
     print("📦 Загружаем модули...")
     load_modules()
     if not modules_info:
@@ -372,7 +380,17 @@ async def main():
     print("🟢 Бот успешно запущен! Ожидаем команды...")
     try:
         me = await app.get_me()
-        await app.send_message(me.id, 'Бот запущен!')
+        current_version = await get_version()
+        uptime = time.time() - start_time
+        hours, rem = divmod(uptime, 3600)
+        minutes, seconds = divmod(rem, 60)
+        await app.send_message(me.id, f'🐊 |LSC USER BOT|\n🌟 Версия: {current_version}\n🕐 Время запуска: {int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}\n✨ Основной канал: @lscuserbot\n✨ Канал с модулями: @lscmods\n⭐️ Доступные команды » <code>{prefix}help</code>')
+        required_channels = ["lscmods", "lscuserbot"]
+        for channel in required_channels:
+            try:
+                await app.join_chat(channel)
+            except Exception as e:
+                print(f"⚠️ Не удалось подписаться на @{channel}: {e}")
     except Exception as e:
         print(f"⚠️ Не удалось отправить сообщение о запуске: {e}")
 
