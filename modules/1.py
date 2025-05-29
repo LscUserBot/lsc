@@ -1,7 +1,6 @@
 from utils.imports import *
 from utils.func import *
 
-
 #meta name: System
 #meta developer: @zxcsolomka
 #meta description: Системные модули
@@ -506,13 +505,13 @@ async def update_bot(client: Client, message: Message):
     if not os.path.exists("utils/updater.py"):
         await message.edit_text("❌ Файл обновления не найден!")
         return
-
+    
     await message.edit_text("🔄 Подготовка к обновлению...")
-
+    
     old_version = await get_version()
     with open("update_info.txt", "w") as f:
         f.write(f"{message.chat.id}\n{message.id}\n{old_version}")
-
+    
     try:
         python_exec = sys.executable
         subprocess.Popen([python_exec, "utils/updater.py"], start_new_session=True)
