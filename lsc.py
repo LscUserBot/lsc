@@ -1,23 +1,5 @@
-import os
-import importlib.util
-import re
-import random
-import string
-import sqlite3
-from pyrogram import Client, filters, idle
-from pyrogram.types import Message
-from pathlib import Path
-import asyncio
-import psutil
-import sys
-import os
-import sys
-import time
-import subprocess
-import requests
-import pytz
-import platform
-from datetime import datetime
+from utils.imports import *
+from utils.func import *
 
 start_time = time.time()
 system = platform.system()
