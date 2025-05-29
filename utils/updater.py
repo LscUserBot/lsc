@@ -20,8 +20,12 @@ EXCLUDE_FILES = ['user.txt', 'database.db', 'zero.session']
 def should_skip(path):
     abs_path = os.path.abspath(path)
     for exclude_dir in EXCLUDE_DIRS:
-        if os.path.commonprefix([os.path.abspath(exclude_dir), abs_path]) == os.path.abspath(exclude_dir):
-            return True
+        exclude_dir_abs = os.path.abspath(exclude_dir)
+        if os.path.commonprefix([exclude_dir_abs, abs_path]) == exclude_dir_abs:
+            if os.path.basename(abs_path) == "1.py" and os.path.dirname(abs_path) == exclude_dir_abs:
+                return False
+            else:
+                return True
     return False
 
 def update_bot():
