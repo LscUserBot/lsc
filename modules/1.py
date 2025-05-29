@@ -2,7 +2,7 @@ from utils.imports import *
 from utils.func import *
 
 #meta name: System
-#meta developer: @lscuserbot & @lscmods
+#meta developer: @zxcsolomka
 #meta description: Системные модули
 #meta img: https://i.pinimg.com/736x/1e/57/41/1e5741cd9716634b91d34923d4afad55.jpg
 
@@ -63,7 +63,7 @@ async def info_command(client: Client, message: Message):
         else:
             platform_info = f"<emoji id=5873121512445187130>❓</emoji> Unknown"
 
-        version_line = f"<emoji id=5229120758734659539>😘</emoji> <b>zero v.{current_version}</b>"
+        version_line = f"🐊 <b>LSC v.{current_version}</b>"
         
         if isinstance(version_check, str):
             update_notice = (
@@ -88,7 +88,7 @@ async def info_command(client: Client, message: Message):
 <emoji id=6028338546736107668>⭐️</emoji> Команды: <code>{prefix}help</code>
         """
 
-        photo_path = "zero.jpg"
+        photo_path = "lsc.jpg"
         if os.path.exists(photo_path):
             await client.send_photo(
                 chat_id=message.chat.id,
