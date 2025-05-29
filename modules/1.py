@@ -2,7 +2,7 @@ from utils.imports import *
 from utils.func import *
 
 #meta name: System
-#meta developer: @zxcsolomka
+#meta developer: @lscuserbot & @lscmods
 #meta description: Системные модули
 #meta img: https://i.pinimg.com/736x/1e/57/41/1e5741cd9716634b91d34923d4afad55.jpg
 
@@ -411,13 +411,8 @@ async def delete_module(client: Client, message: Message):
 async def restart_bot(client: Client, message: Message):
     await message.edit_text("🔄 Полная перезагрузка бота...")
     
-    restart_info = {
-        "chat_id": message.chat.id,
-        "message_id": message.id
-    }
-    
     with open("restart_info.txt", "w") as f:
-        f.write(f"{restart_info['chat_id']}\n{restart_info['message_id']}")
+        f.write(f"{message.chat.id}\n{message.id}\n{time.time()}")
     
     os.execv(sys.executable, [sys.executable] + sys.argv)
 
@@ -519,7 +514,7 @@ async def update_bot(client: Client, message: Message):
                 [python_exec, "utils/updater.py"],
                 creationflags=subprocess.CREATE_NEW_CONSOLE
             )
-        else:  # Linux/macOS
+        else:
             subprocess.Popen(
                 [python_exec, "utils/updater.py"],
                 start_new_session=True,
@@ -529,7 +524,7 @@ async def update_bot(client: Client, message: Message):
 
         print("💤 Ждём перед выходом...")
         await asyncio.sleep(2)
-        sys.exit(0)
+        os._exit(0)
 
     except Exception as e:
         await message.edit_text(f"❌ Ошибка запуска обновления: {e}")
