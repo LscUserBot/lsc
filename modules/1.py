@@ -143,17 +143,23 @@ async def modules_help_command(client: Client, message: Message):
             try:
                 if module_info["img"]:
                     await message.delete()
-                    await message.reply_photo(module_info["img"], caption=response)
+                    await message.reply_photo(
+                        module_info["img"], 
+                        caption=response
+                    )
                 else:
-                    await message.edit_text(response)
-            except:
+                    await message.edit_text(
+                        response
+                    )
+            except Exception as e:
+                print(f"Ошибка при отправке фото/сообщения: {e}")
                 await message.edit_text(response)
         elif partial_matches:
             response = "😓 Модуль с таким названием не был найден, но найдены совпадения:\n\n"
-            response += "\n".join([f"» <code>{prefix}mhelp {match}</code>" for match in partial_matches])
-            await message.edit_text(response)
+            response += "\n".join([f"» <code>{prefix}{match}</code>" for match in partial_matches])
+            await message.edit_text(response, disable_web_page_preview=True)
         else:
-            await message.edit_text("❌ Модуль не найден")
+            await message.edit_text("❌ Модуль не найден", disable_web_page_preview=True)
     else:
         total_modules = len(modules_info)
         hidden_modules = sum(1 for info in modules_info.values() if info["hidden"])
@@ -182,7 +188,9 @@ async def modules_help_command(client: Client, message: Message):
             command_list = "|".join([f"{cmd}" for cmd in commands.keys()])
             response += f"» <code>{module_name}</code>: ({command_list})\n"
         
-        await message.edit_text(response)
+        response += f"\n<i><u><a href='t.me/lscmods'>⭐️ Больше модулей тут</a></u></i>"
+        
+        await message.edit_text(response, disable_web_page_preview=True)
 
 @app.on_message(filters.command("lm", prefixes=prefix) & filters.user(allow))
 async def load_module(client: Client, message: Message):
@@ -265,6 +273,113 @@ async def load_module(client: Client, message: Message):
     
     if meta_data["libs"]:
         await install_libraries(msg, meta_data["name"], meta_data["libs"])
+
+@app.on_message(filters.command("dlm", prefixes=prefix) & filters.user(allow))
+async def download_load_module(client: Client, message: Message):
+    if len(message.command) < 2:
+        await message.edit_text("❌ Укажите URL для скачивания модуля\nПример: <code>.dlm https://example.com/module.py</code>")
+        return
+    
+    url = message.command[1].strip()
+    
+    try:
+        parsed_url = urlparse(url)
+        file_name = os.path.basename(parsed_url.path)
+        
+        if not file_name.lower().endswith('.py'):
+            await message.edit_text("❌ Файл должен быть с расширением .py")
+            return
+        
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+        
+        temp_dir = "temp_downloads"
+        if not os.path.exists(temp_dir):
+            os.makedirs(temp_dir)
+        
+        temp_path = os.path.join(temp_dir, file_name)
+        
+        with open(temp_path, "wb") as f:
+            for chunk in response.iter_content(1024):
+                if chunk:
+                    f.write(chunk)
+
+        meta_data = {
+            "name": file_name[:-3],
+            "developer": "Неизвестный разработчик",
+            "description": "Нет описания",
+            "img": None,
+            "hidden": False,
+            "libs": None
+        }
+        
+        with open(temp_path, "r", encoding="utf-8") as f:
+            content = f.read()
+            for line in content.split('\n'):
+                if line.startswith("#meta name:"):
+                    meta_data["name"] = line.split(":", 1)[1].strip()
+                elif line.startswith("#meta developer:"):
+                    meta_data["developer"] = line.split(":", 1)[1].strip()
+                elif line.startswith("#meta description:"):
+                    meta_data["description"] = line.split(":", 1)[1].strip()
+                elif line.startswith("#meta img:"):
+                    meta_data["img"] = line.split(":", 1)[1].strip()
+                elif line.startswith("#meta hidden:"):
+                    meta_data["hidden"] = line.split(":", 1)[1].strip().lower() == "true"
+                elif line.startswith("#meta libs:"):
+                    meta_data["libs"] = line.split(":", 1)[1].strip()
+        
+        if meta_data["name"] in modules_info:
+            os.remove(temp_path)
+            await message.edit_text(f"❌ Модуль с названием <code>{meta_data['name']}</code> уже установлен!")
+            return
+        
+        modules_dir = "modules"
+        if not os.path.exists(modules_dir):
+            os.makedirs(modules_dir)
+        
+        new_filename = file_name
+        name_changed = False
+        
+        # Проверка на существующий файл
+        if os.path.exists(os.path.join(modules_dir, file_name)):
+            name_changed = True
+            file_ext = file_name.split(".")[-1]
+            new_filename = f"{generate_random_name()}.{file_ext}"
+        
+        new_path = os.path.join(modules_dir, new_filename)
+        os.rename(temp_path, new_path)
+        
+        load_modules()
+        
+        response_text = (
+            f"✅ Установлен модуль <code>{meta_data['name']}</code>\n"
+            f"💠 Разработчик: {meta_data['developer']}\n"
+            f"✍️ Описание: {meta_data['description']}"
+        )
+        
+        if name_changed:
+            response_text += f"\n⚠️ <i>Файл с названием <code>{file_name}</code> уже был, поэтому название файла было изменено на <code>{new_filename}</code></i>"
+        
+        try:
+            if meta_data["img"]:
+                await message.delete()
+                msg = await message.reply_photo(meta_data["img"], caption=response_text)
+            else:
+                msg = await message.edit_text(response_text)
+        except Exception as e:
+            print(f"Ошибка при отправке фото: {e}")
+            msg = await message.edit_text(response_text)
+        
+        if meta_data["libs"]:
+            await install_libraries(msg, meta_data["name"], meta_data["libs"])
+    
+    except requests.exceptions.RequestException as e:
+        await message.edit_text(f"❌ Ошибка при скачивании файла: {str(e)}")
+    except Exception as e:
+        await message.edit_text(f"❌ Произошла ошибка: {str(e)}")
+        if 'temp_path' in locals() and os.path.exists(temp_path):
+            os.remove(temp_path)
 
 @app.on_message(filters.command("um", prefixes=prefix) & filters.user(allow))
 async def download_module(client: Client, message: Message):
@@ -680,6 +795,7 @@ modules_help['System'] = {
   "ping": "Узнать пинг",
   "info": "Информация о боте",
   "lm": "Установить модуль",
+  "dlm": "Установить модуль по ссылке",
   "dm": "Удалить модуль",
   "um": "Выгрузить модуль файлом",
   "im": "Информация о модуле по файлу",
