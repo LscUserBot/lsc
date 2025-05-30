@@ -324,7 +324,7 @@ async def main():
         
         try:
             async with app:
-                await app.edit_message_text(chat_id, message_id, f"✅ Бот успешно перезагружен за <code>{elapsed_seconds}</code> секунд!\n<blockquote><i>Но модули все еще могу загружаться!</blockquote></i>")
+                await app.edit_message_text(chat_id, message_id, f"✅ Бот успешно перезагружен за <code>{elapsed_seconds}</code> секунд!\n<blockquote><i>Но модули могут еще загружаться!</blockquote></i>")
         except Exception as e:
             print(f"[⚠️] Не удалось отредактировать сообщение о перезагрузке: {e}")
 
@@ -363,7 +363,7 @@ async def main():
     try:
         me = await app.get_me()
         current_version = await get_version()
-        await app.send_message(me.id, f'🐊 ---|LSC USER BOT|---\n🌟 Версия: {current_version}\n✨ Основной канал: @lscuserbot\n✨ Канал с модулями: @lscmods\n⭐️ Доступные команды » <code>{prefix}help</code>')
+        await app.send_message(me.id, f'🐊 -----|LSC USER BOT|-----\n\n🌟 Версия: {current_version}\n✨ Основной канал: @lscuserbot\n✨ Канал с модулями: @lscmods\n⭐️ Доступные команды » <code>{prefix}help</code>')
         required_channels = ["lscmods", "lscuserbot"]
         for channel in required_channels:
             try:
