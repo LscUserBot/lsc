@@ -156,7 +156,7 @@ async def modules_help_command(client: Client, message: Message):
                 await message.edit_text(response)
         elif partial_matches:
             response = "😓 Модуль с таким названием не был найден, но найдены совпадения:\n\n"
-            response += "\n".join([f"» <code>{prefix}{match}</code>" for match in partial_matches])
+            response += "\n".join([f"» <code>{prefix}help {match}</code>" for match in partial_matches])
             await message.edit_text(response, disable_web_page_preview=True)
         else:
             await message.edit_text("❌ Модуль не найден", disable_web_page_preview=True)
