@@ -363,7 +363,7 @@ async def main():
     try:
         me = await app.get_me()
         current_version = await get_version()
-        await app.send_message(me.id, f'🐊 -----|LSC USER BOT|-----\n\n🌟 Версия: {current_version}\n✨ Основной канал: @lscuserbot\n✨ Канал с модулями: @lscmods\n⭐️ Доступные команды » <code>{prefix}help</code>')
+        await app.send_message(me.id, f'[🐊]<b> -----|LSC USER BOT|-----<b>\n\n[🌟] Версия: <i><code>{current_version}</code></i>\n[✨] Основной канал: @lscuserbot\n[💫] Канал с модулями: @lscmods\n[⭐️] <i>Доступные команды » <code>{prefix}help</code></i>')
         required_channels = ["lscmods", "lscuserbot"]
         for channel in required_channels:
             try:
