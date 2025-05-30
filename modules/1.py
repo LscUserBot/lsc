@@ -197,23 +197,23 @@ async def load_module(client: Client, message: Message):
     if not message.reply_to_message or not message.reply_to_message.document:
         await message.edit_text("❌ Ответьте на сообщение с файлом модуля (.py)")
         return
-    
+
     document = message.reply_to_message.document
     if not document.file_name.endswith(".py"):
         await message.edit_text("❌ Файл должен быть с расширением .py")
         return
-    
+
     temp_path = await message.reply_to_message.download()
-    
+
     meta_data = {
         "name": document.file_name[:-3],
         "developer": "Неизвестный разработчик",
         "description": "Нет описания",
         "img": None,
-        "hidden": False,
-        "libs": None
+        "libs": None,
+        "commands": {}
     }
-    
+
     with open(temp_path, "r", encoding="utf-8") as f:
         content = f.read()
         for line in content.split('\n'):
@@ -225,42 +225,58 @@ async def load_module(client: Client, message: Message):
                 meta_data["description"] = line.split(":", 1)[1].strip()
             elif line.startswith("#meta img:"):
                 meta_data["img"] = line.split(":", 1)[1].strip()
-            elif line.startswith("#meta hidden:"):
-                meta_data["hidden"] = line.split(":", 1)[1].strip().lower() == "true"
             elif line.startswith("#meta libs:"):
                 meta_data["libs"] = line.split(":", 1)[1].strip()
-    
+            elif line.startswith("modules_help[") and "]" in line:
+                try:
+                    module_name = line.split("['")[1].split("']")[0]
+                    if module_name == meta_data["name"]:
+                        commands_section = content.split("modules_help[")[1].split("] = {")[1].split("}")[0]
+                        for cmd_line in commands_section.split('\n'):
+                            if '": ' in cmd_line:
+                                cmd = cmd_line.split('"')[1]
+                                desc = cmd_line.split('": "')[1].split('"')[0]
+                                meta_data["commands"][cmd] = desc
+                except Exception as e:
+                    print(f"⚠️ Ошибка парсинга команд: {e}")
+                    meta_data["commands"] = {}
+
     if meta_data["name"] in modules_info:
         os.remove(temp_path)
         await message.edit_text(f"❌ Модуль с названием <code>{meta_data['name']}</code> уже установлен!")
         return
-    
+
     modules_dir = "modules"
     if not os.path.exists(modules_dir):
         os.makedirs(modules_dir)
-    
+
     new_filename = document.file_name
     name_changed = False
-    
+
     if os.path.exists(os.path.join(modules_dir, document.file_name)):
         name_changed = True
         file_ext = document.file_name.split(".")[-1]
         new_filename = f"{generate_random_name()}.{file_ext}"
-    
+
     new_path = os.path.join(modules_dir, new_filename)
     os.rename(temp_path, new_path)
-    
+
     load_modules()
-    
+
     response = (
         f"✅ Установлен модуль <code>{meta_data['name']}</code>\n"
         f"💠 Разработчик: {meta_data['developer']}\n"
         f"✍️ Описание: {meta_data['description']}"
     )
-    
+
+    if meta_data["commands"]:
+        response += "\n\n💫 Команды модуля:\n"
+        for cmd, desc in meta_data["commands"].items():
+            response += f"» <code>{prefix}{cmd}</code> - {desc}\n"
+
     if name_changed:
         response += f"\n⚠️ <i>Файл с названием <code>{document.file_name}</code> уже был, поэтому название файла было изменено на <code>{new_filename}</code></i>"
-    
+
     try:
         if meta_data["img"]:
             await message.delete()
@@ -270,35 +286,36 @@ async def load_module(client: Client, message: Message):
     except Exception as e:
         print(f"Ошибка при отправке фото: {e}")
         msg = await message.edit_text(response)
-    
+
     if meta_data["libs"]:
         await install_libraries(msg, meta_data["name"], meta_data["libs"])
+
 
 @app.on_message(filters.command("dlm", prefixes=prefix) & filters.user(allow))
 async def download_load_module(client: Client, message: Message):
     if len(message.command) < 2:
-        await message.edit_text("❌ Укажите URL для скачивания модуля\nПример: <code>.dlm https://example.com/module.py</code>")
+        await message.edit_text("❌ Укажите URL для скачивания модуля\nПример: <code>.dlm https://example.com/module.py</code>")   
         return
-    
+
     url = message.command[1].strip()
-    
+
     try:
         parsed_url = urlparse(url)
         file_name = os.path.basename(parsed_url.path)
-        
+
         if not file_name.lower().endswith('.py'):
             await message.edit_text("❌ Файл должен быть с расширением .py")
             return
-        
+
         response = requests.get(url, stream=True)
         response.raise_for_status()
-        
+
         temp_dir = "temp_downloads"
         if not os.path.exists(temp_dir):
             os.makedirs(temp_dir)
-        
+
         temp_path = os.path.join(temp_dir, file_name)
-        
+
         with open(temp_path, "wb") as f:
             for chunk in response.iter_content(1024):
                 if chunk:
@@ -309,10 +326,10 @@ async def download_load_module(client: Client, message: Message):
             "developer": "Неизвестный разработчик",
             "description": "Нет описания",
             "img": None,
-            "hidden": False,
-            "libs": None
+            "libs": None,
+            "commands": {}
         }
-        
+
         with open(temp_path, "r", encoding="utf-8") as f:
             content = f.read()
             for line in content.split('\n'):
@@ -324,43 +341,59 @@ async def download_load_module(client: Client, message: Message):
                     meta_data["description"] = line.split(":", 1)[1].strip()
                 elif line.startswith("#meta img:"):
                     meta_data["img"] = line.split(":", 1)[1].strip()
-                elif line.startswith("#meta hidden:"):
-                    meta_data["hidden"] = line.split(":", 1)[1].strip().lower() == "true"
                 elif line.startswith("#meta libs:"):
                     meta_data["libs"] = line.split(":", 1)[1].strip()
-        
+                elif line.startswith("modules_help[") and "]" in line:
+                    try:
+                        module_name = line.split("['")[1].split("']")[0]
+                        if module_name == meta_data["name"]:
+                            commands_section = content.split("modules_help[")[1].split("] = {")[1].split("}")[0]
+                            for cmd_line in commands_section.split('\n'):
+                                if '": ' in cmd_line:
+                                    cmd = cmd_line.split('"')[1]
+                                    desc = cmd_line.split('": "')[1].split('"')[0]
+                                    meta_data["commands"][cmd] = desc
+                    except Exception as e:
+                        print(f"⚠️ Ошибка парсинга команд: {e}")
+                        meta_data["commands"] = {}
+
         if meta_data["name"] in modules_info:
             os.remove(temp_path)
             await message.edit_text(f"❌ Модуль с названием <code>{meta_data['name']}</code> уже установлен!")
             return
-        
+
         modules_dir = "modules"
         if not os.path.exists(modules_dir):
             os.makedirs(modules_dir)
-        
+
         new_filename = file_name
         name_changed = False
-        
+
         # Проверка на существующий файл
         if os.path.exists(os.path.join(modules_dir, file_name)):
             name_changed = True
             file_ext = file_name.split(".")[-1]
             new_filename = f"{generate_random_name()}.{file_ext}"
-        
+
         new_path = os.path.join(modules_dir, new_filename)
         os.rename(temp_path, new_path)
-        
+
         load_modules()
-        
+
         response_text = (
             f"✅ Установлен модуль <code>{meta_data['name']}</code>\n"
             f"💠 Разработчик: {meta_data['developer']}\n"
             f"✍️ Описание: {meta_data['description']}"
         )
-        
+
+        if meta_data["commands"]:
+            response_text += "\n\n💫 Команды модуля:\n"
+            for cmd, desc in meta_data["commands"].items():
+                response_text += f"» <code>{prefix}{cmd}</code> - {desc}\n"
+
         if name_changed:
             response_text += f"\n⚠️ <i>Файл с названием <code>{file_name}</code> уже был, поэтому название файла было изменено на <code>{new_filename}</code></i>"
-        
+
         try:
             if meta_data["img"]:
                 await message.delete()
@@ -370,10 +403,10 @@ async def download_load_module(client: Client, message: Message):
         except Exception as e:
             print(f"Ошибка при отправке фото: {e}")
             msg = await message.edit_text(response_text)
-        
+
         if meta_data["libs"]:
             await install_libraries(msg, meta_data["name"], meta_data["libs"])
-    
+
     except requests.exceptions.RequestException as e:
         await message.edit_text(f"❌ Ошибка при скачивании файла: {str(e)}")
     except Exception as e:
