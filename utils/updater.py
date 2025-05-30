@@ -2,7 +2,6 @@ from utils.imports import *
 from utils.func import *
 
 def on_rm_error(func, path, exc_info):
-    """Функция для обработки ошибок при удалении"""
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
