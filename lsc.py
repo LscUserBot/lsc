@@ -104,7 +104,7 @@ async def install_libraries(message, module_name, libs_str):
     installed_count = 0
     results = []
     
-    msg = await message.reply("🔄 Подготовка к установке библиотек...")
+    msg = await message.reply("[🔄] Подготовка к установке библиотек...")
     
     for lib in libs:
         try:
@@ -117,7 +117,7 @@ async def install_libraries(message, module_name, libs_str):
                 pass
             
             message_parts = [
-                f"❗️ Для корректной работы модуля <code>{module_name}</code> требуется установка следующих библиотек:",
+                f"[❗️] Для корректной работы модуля <code>{module_name}</code> требуется установка следующих библиотек:",
                 "<blockquote>" + "\n".join(results) + "\n",
                 f"» <code>{lib}</code> [🔄 Установка...]</blockquote>",
                 "",
@@ -143,13 +143,13 @@ async def install_libraries(message, module_name, libs_str):
     
     if installed_count == total_libs:
         success_message = [
-            f"✅ Установка библиотек: <code>{', '.join(libs)}</code> успешно завершена!",
-            f"<blockquote>🔄 Для применений нужна перезагрузка <code>{prefix}restart</code></blockquote>"
+            f"[✅] Установка библиотек: <code>{', '.join(libs)}</code> успешно завершена!",
+            f"<blockquote>[🔄] Для применений нужна перезагрузка <code>{prefix}restart</code></blockquote>"
         ]
         await msg.edit_text("\n".join(success_message))
     else:
         error_message = [
-            f"❗️ Для корректной работы модуля <code>{module_name}</code> требуется установка следующих библиотек:",
+            f"[❗️] Для корректной работы модуля <code>{module_name}</code> требуется установка следующих библиотек:",
             "<blockquote>" + "\n".join(results) + "</blockquote>",
             "",
             "<i>Некоторые библиотеки не были установлены. Проверьте правильность названий и попробуйте установить их вручную.</i>"
@@ -247,8 +247,22 @@ def load_modules():
                     "img": meta_data["img"],
                     "hidden": meta_data["hidden"]
                 }
+                emojis = [
+                    "💠", "🧿", "🪬", "🌀",
+                    "🔵", "🔷", "🔹", "💙",
+                    "🌊", "💧", "🦋", "🧊",
+                    "🚙", "🛳️", "✈️", "🛩️",
+                    "👕", "🧢", "🧵", "🪡",
+                    "🦕", "🐳", "🐬", "🦈",
+                    "🎐", "🎣", "🏊", "🚿",
+                    "🧩", "🎽", "🛟", "🛰️",
+                    "💎", "📘", "🖌️", "🖍️",
+                    "🧵", "🪢", "🧶", "🛍️",
+                    "🪁", "🎨", "📲", "📱",
+                    "🛋️", "🚙", "🚤", "🚢"]
                 
-                print(f"[✅] Модуль {meta_data['name']} загружен из файла {filename}")
+                emoji = random.choice(emojis)
+                print(f"[{emoji}] Модуль '{meta_data['name']}' загружен из файла {filename}")
                 
             except Exception as e:
                 print(f"[❌] Ошибка загрузки модуля {filename}: {e}")
@@ -299,8 +313,8 @@ async def main():
                             changes = "\n".join(line.strip() for line in v_lines[1:]) or "Не указано"
 
                 message_text = (
-                    f"✅ Бот был успешно обновлен с <code>{old_version}</code> на <code>{new_version}</code>\n"
-                    f"<blockquote>✏️ <i>Изменения в версии:\n{changes}</i></blockquote>"
+                    f"[✅] Бот был успешно обновлен с <code>{old_version}</code> на <code>{new_version}</code>\n"
+                    f"<blockquote>[✏️] <i>Изменения в версии:\n{changes}</i></blockquote>"
                 )
                 await app.edit_message_text(chat_id, message_id, message_text)
         except Exception as e:
@@ -324,7 +338,7 @@ async def main():
         
         try:
             async with app:
-                await app.edit_message_text(chat_id, message_id, f"✅ Бот успешно перезагружен за <code>{elapsed_seconds}</code> секунд!\n<blockquote><i>Но модули могут еще загружаться!</blockquote></i>")
+                await app.edit_message_text(chat_id, message_id, f"[✅] Бот успешно перезагружен за <code>{elapsed_seconds}</code> секунд!\n<blockquote><i>Но модули могут еще загружаться!</blockquote></i>")
         except Exception as e:
             print(f"[⚠️] Не удалось отредактировать сообщение о перезагрузке: {e}")
 
@@ -359,11 +373,11 @@ async def main():
     else:
         print(f"[✅] Загружено {len(modules_info)} модулей")
 
-    print("[🟢] Бот успешно запущен!")
+    print("[🐊] Бот успешно запущен!")
     try:
         me = await app.get_me()
         current_version = await get_version()
-        await app.send_message(me.id, f'[🐊]<b> -----|LSC USER BOT|-----<b>\n\n[🌟] Версия: <i><code>{current_version}</code></i>\n[✨] Основной канал: @lscuserbot\n[💫] Канал с модулями: @lscmods\n[⭐️] <i>Доступные команды » <code>{prefix}help</code></i>')
+        await app.send_message(me.id, f'[🐊]<b> -----|LSC USER BOT|-----<b>\n\n[❇️] Бот был запущен и все модули загружены\n\n[🌟] Версия: <i><code>{current_version}</code></i>\n[✨] Основной канал: @lscuserbot\n[💫] Канал с модулями: @lscmods\n[⭐️] <i>Доступные команды » <code>{prefix}help</code></i>')
         required_channels = ["lscmods", "lscuserbot"]
         for channel in required_channels:
             try:
