@@ -248,20 +248,20 @@ def load_modules():
                     "hidden": meta_data["hidden"]
                 }
                 
-                print(f"Модуль {meta_data['name']} загружен из файла {filename}")
+                print(f"[✅] Модуль {meta_data['name']} загружен из файла {filename}")
                 
             except Exception as e:
-                print(f"Ошибка загрузки модуля {filename}: {e}")
+                print(f"[❌] Ошибка загрузки модуля {filename}: {e}")
 
 async def authorize():
     try:
-        print("🔧 Попытка авторизации...")
+        print("[🔧] Попытка авторизации...")
         await app.start()
         me = await app.get_me()
-        print(f"✅ Авторизован как {me.first_name} (ID: {me.id})")
+        print(f"[✅] Авторизован как {me.first_name} (ID: {me.id})")
         version_status = await check_version(app, prefix) 
         if version_status is False:
-            print("❌ Критическая ошибка версии, завершаю работу")
+            print("[❌] Критическая ошибка версии, завершаю работу")
             await app.stop()
             return
 
@@ -270,11 +270,11 @@ async def authorize():
             new_allow.append(me.id)
             update_settings(allow=new_allow)
             globals()['allow'] = new_allow
-            print(f"✅ ID {me.id} добавлен в список владельцев")
+            print(f"[✅] ID {me.id} добавлен в список владельцев")
         
         return True
     except Exception as e:
-        print(f"❌ Ошибка авторизации: {str(e)}")
+        print(f"[❌] Ошибка авторизации: {str(e)}")
         return False
 
 async def main():
@@ -304,7 +304,7 @@ async def main():
                 )
                 await app.edit_message_text(chat_id, message_id, message_text)
         except Exception as e:
-            print(f"⚠️ Не удалось отправить сообщение об обновлении: {e}")
+            print(f"[⚠️] Не удалось отправить сообщение об обновлении: {e}")
         finally:
             if os.path.exists("update_info.txt"):
                 os.remove("update_info.txt")
@@ -326,52 +326,52 @@ async def main():
             async with app:
                 await app.edit_message_text(chat_id, message_id, f"✅ Бот успешно перезагружен за <code>{elapsed_seconds}</code> секунд!\n<blockquote><i>Но модули все еще могу загружаться!</blockquote></i>")
         except Exception as e:
-            print(f"⚠️ Не удалось отредактировать сообщение: {e}")
+            print(f"[⚠️] Не удалось отредактировать сообщение о перезагрузке: {e}")
 
     from utils.start import print_start
     print_start()
-    print("🔄 Начинаем авторизацию...")
+    print("[🔄] Начинаем авторизацию...")
 
     if not await authorize():
-        print("⚠️ Авторизация не удалась, запрашиваем данные вручную...")
-        phone = input("📱 Введите номер телефона: ")
+        print("[⚠️] Авторизация не удалась, запрашиваем данные вручную...")
+        phone = input("[📱] Введите номер телефона: ")
         try:
             async with app:
                 sent_code = await app.send_code(phone)
-                code = input("🔢 Введите код подтверждения: ")
+                code = input("[🔢] Введите код подтверждения: ")
                 await app.sign_in(phone, sent_code.phone_code_hash, code)
                 me = await app.get_me()
-                print(f"✅ Успешная авторизация как {me.first_name}")
+                print(f"[✅] Успешная авторизация как {me.first_name}")
                 if me.id not in allow:
                     new_allow = allow.copy()
                     new_allow.append(me.id)
                     update_settings(allow=new_allow)
                     globals()['allow'] = new_allow
-                    print(f"✅ ID {me.id} добавлен в список владельцев")
+                    print(f"[✅] ID {me.id} добавлен в список владельцев")
         except Exception as e:
-            print(f"❌ Критическая ошибка при входе: {str(e)}")
+            print(f"[❌] Критическая ошибка при входе: {str(e)}")
             return
 
-    print("📦 Загружаем модули...")
+    print("[📦] Загружаем модули...")
     load_modules()
     if not modules_info:
-        print("⚠️ Нет загруженных модулей!")
+        print("[⚠️] Нет загруженных модулей!")
     else:
-        print(f"✅ Загружено {len(modules_info)} модулей")
+        print(f"[✅] Загружено {len(modules_info)} модулей")
 
-    print("🟢 Бот успешно запущен! Ожидаем команды...")
+    print("[🟢] Бот успешно запущен!")
     try:
         me = await app.get_me()
         current_version = await get_version()
-        await app.send_message(me.id, f'🐊 |LSC USER BOT|\n🌟 Версия: {current_version}\n✨ Основной канал: @lscuserbot\n✨ Канал с модулями: @lscmods\n⭐️ Доступные команды » <code>{prefix}help</code>')
+        await app.send_message(me.id, f'🐊 ---|LSC USER BOT|---\n🌟 Версия: {current_version}\n✨ Основной канал: @lscuserbot\n✨ Канал с модулями: @lscmods\n⭐️ Доступные команды » <code>{prefix}help</code>')
         required_channels = ["lscmods", "lscuserbot"]
         for channel in required_channels:
             try:
                 await app.join_chat(channel)
             except Exception as e:
-                print(f"⚠️ Не удалось подписаться на @{channel}: {e}")
+                print(f"[⚠️] Не удалось подписаться на @{channel}: {e}")
     except Exception as e:
-        print(f"⚠️ Не удалось отправить сообщение о запуске: {e}")
+        print(f"[⚠️] Не удалось отправить сообщение о запуске: {e}")
 
     await idle()
 
