@@ -58,7 +58,7 @@ pip install -r requirements.txt
 При первом запуске бот попросит ввести: 
 - **API ID** 
 - **API HASH** 
-### Они будут сохранены в файле <code>user.txt</code>. 
+<p>Они будут сохранены в файле <code>user.txt</code></p> 
 
 Запустите бота: 
 ```bash
